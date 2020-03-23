@@ -1,0 +1,190 @@
+---
+title: "Econometria"
+author: "Laboratorio Fintrade"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. Modelos de regresión 
+
+Regresión lineal simple: es el  estudio de la dependencia de una variable (variable dependiente) respecto de una o mas variables (variables explicativas) con el objetivo de estimar el valor promedio  de la primera en términos de los valores conocidos de la segunda variable. (Gujarati, 2009)
+
+Regresión lineal multiple:  nos sirve para entender la relación funcional entre la variable dependiente y las variables independientes y así, estudiar cuáles pueden ser las causas de la variación de Y.
+
+Por ejemplo, si planteamos un modelo de regresión lineal simple que explique la relación de la balanza comercial de Colombia con respecto al tipo de cambio colombiano, seguramente encontraremos una relación significativa entre ambas variables. 
+
+## Instalar librerías
+
+```{r instalar librerias, message=FALSE, results='hide',warning=FALSE}
+library(MASS)
+library(lmtest)
+library(mvnormtest)
+library(leaps)
+library(fBasics)
+library(car)
+library(gvlma)
+
+```
+
+## Importar base de datos 
+
+```{r importar base, message=FALSE, warning=FALSE}
+library(readxl)
+modelo  =read_excel("D:/bdreg/ntmrl.xlsx")
+```
+
+## Definir las variables de la base de datos
+```{r definir variables, message=FALSE}
+
+ex = modelo$Exportaciones
+im = modelo$Importaciones
+TRM = modelo$trm
+bc =modelo$`balanza comercial`
+Fecha = as.Date(modelo$Fecha, format=  "%Y-%m-%d")
+```
+
+
+## Resumen de estadísticas de la base de datos
+```{r resumen de estadisticas, message=FALSE}
+attach(modelo)
+summary(modelo)
+
+
+```
+
+##  2. Estimación del modelo lineal simple
+```{r modelo 1, message=FALSE}
+
+reg1 <- lm(bc~TRM)
+
+summary(reg1)
+
+```
+
+Como se dijo anteriormente, sí existe una alta relacion entre la Balanza Comercial de Colombia y la tasa de cambio. 
+
+
+
+
+## 3. Estimación del modelo lineal multiple
+
+A continuación se realizará un ejercicio de regresión lineal multiple, donde la variable independiente serán las importanciones y las dependientes las exportaciones y la tasa representativa del mercado.
+```{r modelo 2, message=FALSE}
+
+reg2 <- lm(im~TRM+ex)
+
+summary(reg2)
+
+
+
+```
+
+- Hay significancia global en el modelo
+- Cada una de las variables independientes son significativas en contraste con la variable dependiente con un nivel de significancia del 0.01%
+ 
+## 4.Residuos
+
+Los residuos o errores son la diferencia entre los valores observados y los valores que predice el modelo.
+
+Los modelos de regresión lineal asumen tres supuestos importantes: la relación es de tipo lineal, los residuos siguen una distribución normal  y la varianza de dichos residuos es constante.
+
+## Gráfico de residuos
+
+Mediante el gráfico de residuos se evaluan también los supuestos del modelo y si el ajuste es adecuado, cuando se trabaja con un modelo de regresión lineal simple solo se necesita un gráfico de dispersión con las dos variables.
+
+
+## Gráfico de los residuos de la regresión  1
+```{r graficos de residuos reg1, message=FALSE}
+
+library(ggplot2)
+f = ggplot(reg1, aes(x=bc, y=TRM)) 
+
+f + geom_point(position="jitter")
+```
+
+
+## Gráfico de residuos de la regresión
+
+Cuando se quiere ajustar un modelo de regresión multiple, es más sencillo evaluar el ajuste del modelo mediante los gráficos de residuos.
+
+```{r graficos de residuos reg2, message=FALSE}
+
+
+par(mfrow=c(2,2))
+plot(reg2)
+
+
+```
+
+
+El gráfico "Normal Q-Q" es una forma de identificar la normalidad del modelo de manera grafica, se observa que cuando los valores entre mas se acerquen a la línea de tendencia son normales.
+
+El gráfico "Residuals vs Fitted"  determina de manera gráfica si la linealidad es válida, la homocedasticidad y también si hay valores atípicos.
+
+El gráfico "Scale-Location" este gráfico muestra si los residuos se distribuyen por igual a lo largo de los rangos de predictores.
+
+El gráfico "Residuals vs Leverage" este argumento ayuda a encontrar casos influyentes si los hay. Sin embargo, no todos los valores atípicos influyen en el análisis de regresión lineal, aunque los datos tengan valores muy grandes, puede que no sean influyentes.
+
+## Análisis de los residuos para la estimación de los coeficientes
+```{r residuos, message=FALSE}
+residuos = reg2$residuals
+residuosest<-rstudent(reg2)
+
+```
+
+##  4. Pruebas estadísticas de linealidad
+
+
+
+```{r Pruebas estadisticas de linealidad, message=FALSE}
+
+library(lmtest)
+resettest(reg2)
+
+
+```
+
+ Con un nivel de significancia del 0.01 no rechazo Ho
+ 
+ 
+## 5. Pruebas estadísticas de normalidad
+
+- Ho: Los datos siguen una distribución especificada
+- H1: Los datos no siguen una distribución especificada
+```{r Prueba estadisticas de normalidad, message=FALSE}
+
+
+
+##Kolmogorov Smirnov
+ks.test(residuosest,"pnorm")
+
+
+
+```
+Con un nivel de significancia del 0.01, no rechazo Ho
+
+## 6. Pruebas estadísticas de homocedasticidad 
+
+- Ho es que las varianzas son iguales
+- Si es p valor da significativo, es decir mayor al nivel de significancia es homocedastico  entonces no rechazo Ho
+- Si el p valor no da significativo, es decir, menor al nivel de significancia  es  heterocedastico  entonces rechazo Ho
+```{r Prueba estadisticas de homocedasticidad, message=FALSE}
+##Breush Pagan
+bptest(reg2)
+
+
+```
+
+Con un nivel de significancia del 0.01, no rechazo Ho
+
+## 7. Multicolinealidad
+```{r multicolinealidad, message=FALSE}
+
+library(car)
+vif(reg2)
+```
+
+- Un VIF mayor a 10 presenta multicolinealidad entre las variables
