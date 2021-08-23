@@ -10,7 +10,7 @@ Inicialmente, hay diferentes procesos de modelización, para este caso se expond
 
 Considerando lo expuesto anteriormente, este repositorio se centrará en mostrar algunos modelos empíricos  de regresiones lineales simples y múltiples para contrastar con algún tipo de teoría
 
-## Excel "BD"
+## Excel "ntmrl"
 En el documento de excel llamado **BD**, se encuentra una base de datos la cual se compone de 5 columnas diferentes en las cuales se encuentran datos referentes a:
 - _Columna 1_: Fecha (Enero de 2009 - Diciembre 2019)
 - _Columna 2:_ Exportaciones (Millones de dólares FOB)
